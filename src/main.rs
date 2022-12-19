@@ -173,10 +173,64 @@ fn main() {
         });
     let d10 = (sig_sum, crt);
     // Day 11
+    // TODO results were too slow and too verbose
+    // Day 12
+    let input = include_str!("12.txt").lines().map(|l| l.chars().collect::<Vec<_>>()).collect::<Vec<_>>();
+    let mut start = (0, 0);
+    let mut end = (0, 0);
+    for (y, row) in input.iter().enumerate() {
+        for (x, c) in row.iter().enumerate() {
+            if *c == 'E' { end = (x, y); }
+            if *c == 'S' { start = (x, y); }
+        }
+    }
+    let mut low_points = Vec::new();
+    let map: Vec<Vec<usize>> = input.iter().enumerate().map(|(y, v)| { v.iter().enumerate().map(|(x, c)| {
+        if *c == 'a' { low_points.push((x, y)); }
+        if *c == 'E' {
+            25
+        } else if *c == 'S' {
+            low_points.push((x, y));
+            0
+        } else {
+            *c as usize - 97
+        }
+    }).collect::<Vec<_>>()}).collect();
+    let d12 = (path_find(&map.clone(), start, end),
+        low_points.into_iter().fold(usize::MAX, |m, s| {
+        let l = path_find(&map, s, end);
+        if l < m { l } else { m }
+    }));
+
+    fn adjacent((x, y): (usize, usize), max_x: usize, max_y: usize) -> Vec<(usize, usize)> {
+        let mut result = Vec::new();
+        if x > 0 { result.push((x - 1, y)); }
+        if x < max_x - 1 { result.push((x + 1, y)); }
+        if y > 0 { result.push((x, y - 1)); }
+        if y < max_y - 1 { result.push((x, y + 1)); }
+        result
+    }
+
+    fn path_find(map: &Vec<Vec<usize>>, start: (usize, usize), end: (usize, usize)) -> usize {
+        let mut queue = std::collections::VecDeque::new();
+        let mut visited = HashSet::<(usize, usize)>::new();
+        queue.push_back((start, 0));
+        visited.insert(start);
+        while let Some((pos, round)) = queue.pop_front() {
+            if pos == end { return round; }
+            for adj in adjacent(pos, map[0].len(), map.len()) {
+                if !visited.contains(&adj) && map[adj.1][adj.0] <= map[pos.1][pos.0] + 1 {
+                    visited.insert(adj);
+                    queue.push_back((adj, round + 1));
+                }
+            }
+        }
+        usize::MAX
+    }
 
     // Results
     println!("Days:\n1: {:?}\n2: {:?}\n3: {:?}\n4: {:?}\n5: {:?}\n6: {:?}\n7: {:?}\n8: {:?}\n9: {:?}\n10: {}{}
     \r11: {:?}\n12: {:?}\n13: {:?}\n14: {:?}\n15: {:?}\n16: {:?}\n17: {:?}\n18: {:?}\n19: {:?}\n20: {:?}
     \r21: {:?}\n22: {:?}\n23: {:?}\n24: {:?}\n25: {:?}\nIn: {}ms",
-    d1, d2, d3, d4, 0, d6, d7, d8, d9, d10.0, d10.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, time.elapsed().as_millis() );
+    d1, d2, d3, d4, 0, d6, d7, d8, d9, d10.0, d10.1, 0, d12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, time.elapsed().as_millis() );
 }
